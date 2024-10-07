@@ -2,8 +2,9 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 
+
 # Stand in for processing the image and returning information about style, genre, and artist
-def process_img(img):
+def process_img(path):
     return "Result Text Here"
 
 
@@ -20,7 +21,7 @@ def image_uploader():
         label.config(image=pic)
         label.image = pic
 
-        resultText.config(text=process_img(img))
+        resultText.config(text=process_img(path))
 
     else:
         print("No file chosen. Please try again.")
