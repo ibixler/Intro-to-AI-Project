@@ -2,9 +2,10 @@ import tensorflow as tf
 from tensorflow.keras import layers, models, regularizers
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, InputLayer
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, InputLayer, BatchNormalization
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
-from tensorflow.keras.callbacks import ModelCheckpoint
 
 # Checkpoint to save the best model
 checkpoint = ModelCheckpoint('models/artgan.keras', 
@@ -12,9 +13,12 @@ checkpoint = ModelCheckpoint('models/artgan.keras',
                              monitor='val_loss', 
                              mode='min')
 
+# Early stopping to avoid overfitting
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+
 # Set image size and input shape
-image_size = (150, 150)  # Match to your dataset image size
-input_shape = (150, 150, 3)
+image_size = (250, 250)  # Match to your dataset image size
+input_shape = (250, 250, 3)
 
 # Data augmentation and preparation for training/validation
 train_datagen = ImageDataGenerator(
@@ -22,13 +26,17 @@ train_datagen = ImageDataGenerator(
     shear_range=0.2, 
     zoom_range=0.2, 
     horizontal_flip=True,
+    rotation_range=40,  # Increased rotation
+    width_shift_range=0.3,  # Increased shifts
+    height_shift_range=0.3,  # Increased shifts
+    brightness_range=[0.8, 1.2],  # Added brightness adjustments
     validation_split=0.2  # Use a portion for validation
 )
 
 train_generator = train_datagen.flow_from_directory(
     'wikiart/',
     target_size=image_size,
-    batch_size=32,
+    batch_size=64,  # Increased batch size
     class_mode='categorical',
     subset='training'
 )
@@ -36,7 +44,7 @@ train_generator = train_datagen.flow_from_directory(
 validation_generator = train_datagen.flow_from_directory(
     'wikiart/',
     target_size=image_size,
-    batch_size=32,
+    batch_size=64,  # Increased batch size
     class_mode='categorical',
     subset='validation'
 )
@@ -48,46 +56,49 @@ model = Sequential()
 model.add(InputLayer(input_shape=input_shape))
 
 # First Convolutional Layer with L2 Regularization and Pooling
-model.add(Conv2D(32, (3, 3), activation='relu',
-                 kernel_regularizer=regularizers.l2(0.01)))
+model.add(Conv2D(32, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))
+model.add(BatchNormalization())  # Added Batch Normalization
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))  # Added dropout after convolution layer
 
 # Second Convolutional Layer with L2 Regularization
-model.add(Conv2D(64, (3, 3), activation='relu',
-                 kernel_regularizer=regularizers.l2(0.01)))
+model.add(Conv2D(64, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))
+model.add(BatchNormalization())  # Added Batch Normalization
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))  # Added dropout after convolution layer
 
 # Third Convolutional Layer with L2 Regularization
-model.add(Conv2D(128, (3, 3), activation='relu',
-                 kernel_regularizer=regularizers.l2(0.01)))
+model.add(Conv2D(128, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))
+model.add(BatchNormalization())  # Added Batch Normalization
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))  # Added dropout after convolution layer
 
 # Flattening the 2D output to 1D for dense layers
 model.add(Flatten())
 
 # Fully Connected Dense Layer with Dropout
 model.add(Dense(512, activation='relu'))
-model.add(Dropout(0.5))  # Dropout to prevent overfitting
+model.add(Dropout(0.6))  # Increased dropout rate to 0.6
 
 # Output Layer for 27 classes (based on the problem statement)
 model.add(Dense(27, activation='softmax'))
 
-# Compile the model
-model.compile(optimizer='adam', 
+# Compile the model with a lower learning rate
+model.compile(optimizer=Adam(learning_rate=1e-5),  # Reduced learning rate
               loss='categorical_crossentropy', 
               metrics=['accuracy'])
 
 # Model Summary
 model.summary()
 
-# Training the model
+# Training the model with more epochs and early stopping
 history = model.fit(
     train_generator,
     steps_per_epoch=train_generator.samples // train_generator.batch_size,
     validation_data=validation_generator,
     validation_steps=validation_generator.samples // validation_generator.batch_size,
-    epochs=5,
-    callbacks=[checkpoint]  # Save the best model during training
+    epochs=50,  # Increased epochs with early stopping
+    callbacks=[checkpoint, early_stopping]  # Save the best model during training
 )
 
 # Evaluating the model
