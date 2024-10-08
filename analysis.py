@@ -7,7 +7,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 
-# Checkpoint to save the best model
+# the checkpoint saves the best model
 checkpoint = ModelCheckpoint('models/artgan.keras', 
                              save_best_only=True, 
                              monitor='val_loss', 
@@ -97,7 +97,7 @@ history = model.fit(
     steps_per_epoch=train_generator.samples // train_generator.batch_size,
     validation_data=validation_generator,
     validation_steps=validation_generator.samples // validation_generator.batch_size,
-    epochs=50,  # Increased epochs with early stopping
+    epochs=15,  # Increased epochs with early stopping
     callbacks=[checkpoint, early_stopping]  # Save the best model during training
 )
 
