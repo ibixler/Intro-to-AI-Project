@@ -1,16 +1,15 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
+import input
 
-
-# Stand in for processing the image and returning information about style, genre, and artist
 def process_img(path):
-    return "Result Text Here"
-
+    # Dummy function for illustration
+    return input.process_paint(path)
 
 def image_uploader():
     file_types = [("Png files", "*.png"), ("Jpg files", "*.jpg"), ("Jpeg files", "*.jpeg")]
-    path = tk.filedialog.askopenfilename(filetypes=file_types)
+    path = filedialog.askopenfilename(filetypes=file_types)
 
     # Check for file path
     if len(path):
@@ -21,34 +20,39 @@ def image_uploader():
         label.config(image=pic)
         label.image = pic
 
-        resultText.config(text=process_img(path))
+        # Clear previous text and insert new text
+        resultText.config(state=tk.NORMAL)  # Enable editing to insert text
+        resultText.delete(1.0, tk.END)  # Clear previous content
+        resultText.insert(tk.END, process_img(path))  # Insert new content
+        resultText.config(state=tk.DISABLED)  # Disable editing again to make it read-only
 
     else:
         print("No file chosen. Please try again.")
 
+# GUI setup
+root = tk.Tk()
+root.geometry("600x900")
 
-if __name__ == "__main__":
-    # App object
-    app = tk.Tk()
+# Image label to show selected image
+label = tk.Label(root)
+label.pack()
 
-    # App title and size
-    app.title("p(AI)nt")
-    app.geometry("600x600")
+# Frame to contain the Text widget and Scrollbar
+text_frame = tk.Frame(root)
+text_frame.pack(fill="both", expand=True)
 
-    # Setting background and button color
-    app.option_add("*Label*Background", "white")
-    app.option_add("*Button*Background", "gray")
+# Scrollable Text widget for result display
+scrollbar = tk.Scrollbar(text_frame)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-    label = tk.Label(app)
-    label.pack(pady=10)
+resultText = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=scrollbar.set)
+resultText.pack(fill="both", expand=True)
 
-    # Upload Button
-    uploadButton = tk.Button(app, text="Locate Image", command=image_uploader)
-    uploadButton.pack(side=tk.BOTTOM, pady=20)
+# Configure the scrollbar to work with the Text widget
+scrollbar.config(command=resultText.yview)
 
-    # Result text
-    resultText = tk.Label(app)
-    resultText.pack()
-    # resultText.config(state=tk.DISABLED)
+# Add button to upload image
+upload_btn = tk.Button(root, text="Upload Image", command=image_uploader)
+upload_btn.pack()
 
-    app.mainloop()
+root.mainloop()

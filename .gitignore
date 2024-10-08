@@ -1,4 +1,5 @@
 
+.idea
 Unconfirmed 220110.crdownload
 lib/
 bin/
@@ -8,4 +9,3 @@ include/
 wikiart/
 wikiart.zip
 .DS_Store
-.idea
