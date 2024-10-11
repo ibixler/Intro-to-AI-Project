@@ -7,36 +7,36 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 
-# the checkpoint saves the best model
+
 checkpoint = ModelCheckpoint('models/artgan.keras', 
                              save_best_only=True, 
                              monitor='val_loss', 
                              mode='min')
 
-# Early stopping to avoid overfitting
+
 early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
-# Set image size and input shape
-image_size = (250, 250)  # Match to your dataset image size
-input_shape = (250, 250, 3)
 
-# Data augmentation and preparation for training/validation
+image_size = (150, 150)  # Match to your dataset image size
+input_shape = (150, 150, 3)
+
+
 train_datagen = ImageDataGenerator(
     rescale=1./255, 
     shear_range=0.2, 
     zoom_range=0.2, 
     horizontal_flip=True,
-    rotation_range=40,  # Increased rotation
-    width_shift_range=0.3,  # Increased shifts
-    height_shift_range=0.3,  # Increased shifts
-    brightness_range=[0.8, 1.2],  # Added brightness adjustments
-    validation_split=0.2  # Use a portion for validation
+    rotation_range=40,  
+    width_shift_range=0.3,  
+    height_shift_range=0.3,  
+    brightness_range=[0.8, 1.2],  
+    validation_split=0.2  
 )
 
 train_generator = train_datagen.flow_from_directory(
     'wikiart/',
     target_size=image_size,
-    batch_size=64,  # Increased batch size
+    batch_size=64,  
     class_mode='categorical',
     subset='training'
 )
@@ -44,7 +44,7 @@ train_generator = train_datagen.flow_from_directory(
 validation_generator = train_datagen.flow_from_directory(
     'wikiart/',
     target_size=image_size,
-    batch_size=64,  # Increased batch size
+    batch_size=64,  
     class_mode='categorical',
     subset='validation'
 )
@@ -78,7 +78,7 @@ model.add(Flatten())
 
 # Fully Connected Dense Layer with Dropout
 model.add(Dense(512, activation='relu'))
-model.add(Dropout(0.6))  # Increased dropout rate to 0.6
+model.add(Dropout(0.6))  
 
 # Output Layer for 27 classes (based on the problem statement)
 model.add(Dense(27, activation='softmax'))
@@ -97,16 +97,16 @@ history = model.fit(
     steps_per_epoch=train_generator.samples // train_generator.batch_size,
     validation_data=validation_generator,
     validation_steps=validation_generator.samples // validation_generator.batch_size,
-    epochs=15,  # Increased epochs with early stopping
-    callbacks=[checkpoint, early_stopping]  # Save the best model during training
+    epochs=15, 
+    callbacks=[checkpoint, early_stopping]  
 )
 
-# Evaluating the model
+
 loss, accuracy = model.evaluate(validation_generator)
 print(f"Validation Loss: {loss}")
 print(f"Validation Accuracy: {accuracy}")
 
-# Plotting training history (optional)
+
 plt.plot(history.history['accuracy'], label='accuracy')
 plt.plot(history.history['val_accuracy'], label='val_accuracy')
 plt.xlabel('Epoch')
